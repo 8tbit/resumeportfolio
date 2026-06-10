@@ -4,7 +4,6 @@ title: The MySQL UE4 Plugin Documentation
 ---
 
 <style>
-  /* Global Page Container */
   body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background-color: #ffffff;
@@ -148,7 +147,7 @@ title: The MySQL UE4 Plugin Documentation
   <!-- Header Section Wrapper -->
   <div class="hero-banner">
     <div class="logo-circle">
-      <span class="logo-text">UE4</span>
+      <span class="logo-text">UE46568465468</span>
     </div>
     <div class="banner-titles">
       <h1>The MySQL UE4 Plugin</h1>
