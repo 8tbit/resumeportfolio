@@ -155,6 +155,12 @@ title: The MySQL UE4 Plugin Documentation
 
 <div class="document-container">
 
+  ```ps
+  Write-Host "Test"
+  ```
+
+  # Inner block
+
   <!-- Header Section Wrapper -->
   <div class="hero-banner">
     <div class="logo-circle">
