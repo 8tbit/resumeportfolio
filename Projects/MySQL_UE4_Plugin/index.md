@@ -147,12 +147,199 @@ title: The MySQL UE4 Plugin Documentation
   <!-- Header Section Wrapper -->
   <div class="hero-banner">
     <div class="logo-circle">
-      <span class="logo-text">UE46568465468</span>
+      <span class="logo-text">UE4</span>
     </div>
     <div class="banner-titles">
       <h1>The MySQL UE4 Plugin</h1>
-      <p>Created by Austin Berry | Eniari Studios</p>
+      <p>Created by Austin Berry</p>
     </div>
+  </div>
+
+  <div>
+    ```cpp
+    // Fill out your copyright notice in the Description page of Project Settings.
+#include "MySQLPrivatePCH.h"
+#include "MySQLEngine.h"
+
+MySQLEngine::MySQLEngine()
+{
+}
+
+void MySQLEngine::OpenConnection(std::string DatabaseAddress, std::string Username, std::string Password, std::string DatabaseName, bool OverrideConnection)
+{
+	if (MySQLDatabaseManager::GetInstance()->GetConnection()->isConnected == false || OverrideConnection == true)
+		MySQLDatabaseManager::GetInstance()->InitializeDatabaseConnection(DatabaseAddress, Username, Password, DatabaseName);
+	else
+	{
+		MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "Cannot open a new connection while another connection is open. If you are purposly trying to leave multiple connections open on your SQL server, then add 'true' as an extra parameter onto the openconnection function.\n\t\t While this error has automatically been handled, it is reccommended to go back to your source file and correct the extra OpenConnection() statement added.\n\t\tWARNING: By doing so, you will cause processes on your sql server to infinitly run until manually killing the processes. This could also cause future refused MySQL connections.");
+	}
+}
+
+void MySQLEngine::OpenConnection(ConnectionConfigurationData ConnectionData)
+{
+	OpenConnection(ConnectionData.DatabaseAddress, ConnectionData.Username, ConnectionData.Password, ConnectionData.DatabaseName, false);
+}
+
+void MySQLEngine::CloseConnection()
+{
+	if (MySQLDatabaseManager::GetInstance()->GetConnection() != nullptr)
+	{
+		if (MySQLDatabaseManager::GetInstance()->GetConnection()->isConnected)
+		{
+			MySQLDatabaseManager::GetInstance()->CloseMySQLConnection();
+		}
+
+		else MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "Cannot Close a Connection that Doesn't exist.");
+	}
+
+	else
+	{
+		MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "Cannot Close Connection - Connection Returned Null");
+	}
+}
+
+bool MySQLEngine::ExecuteQuery(std::string Query)
+{
+	if(MySQLDatabaseManager::GetInstance()->GetConnection() != nullptr)
+		if (MySQLDatabaseManager::GetInstance()->GetConnection()->isConnected)
+		{
+			try
+			{
+				MySQLDatabaseManager::GetInstance()->ExecuteMySQLQuery(Query, MySQLDatabaseManager::GetInstance()->GetConnection());
+				return true; //return true if query executed successfully
+			}
+			catch (...)
+			{
+				MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "The command was not successfully executed. Please contact administrator for further issues.");
+				return false;
+			}
+		}
+	MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "There doesn't seem to be a connection to the sql server. Command failed.");
+	return false;
+}
+
+MySQLQueryResult MySQLEngine::FetchResults(std::string Query)
+{
+	if (MySQLDatabaseManager::GetInstance()->GetConnection() != nullptr)
+		if (MySQLDatabaseManager::GetInstance()->GetConnection()->isConnected)
+		{
+			try
+			{
+				MySQLQueryResult Results = MySQLDatabaseManager::GetInstance()->FetchMySQLQueryResults(Query, MySQLDatabaseManager::GetInstance()->GetConnection());
+				return Results;
+			}
+			catch (...)
+			{
+				MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "There was an error trying to Fetch Results. Returning an empty QueryResult...");
+				return MySQLQueryResult();
+			}
+		}
+		else
+		{
+			MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "There is no connection to the SQL server.");
+			return MySQLQueryResult();
+		}
+	else
+	{
+		MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "Cannot Close Connection - Connection Returned Null");
+		return MySQLQueryResult();
+	}
+}
+
+MySQLRowResult MySQLEngine::GetRowWhereColumnEquals(MySQLQueryResult * QueryResults, std::string ColumnName, std::string ColumnValue)
+{
+	MySQLRowResult RowOut = MySQLRowResult();
+	int count = 0;
+
+	for (auto Row : QueryResults->Rows)
+	{
+		for (auto Val : Row.KeyValue)
+		{
+			if (Val.Key == ColumnName)
+			{
+				if (Val.Value == ColumnValue)
+				{
+					if (RowOut.KeyValue.Max() == 0)
+						RowOut = Row;
+					else
+					{
+						count++;
+					}
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else
+				continue;
+		}
+	}
+
+	if (RowOut.KeyValue.Max() != 0)
+	{
+		if (count > 0)
+		{
+			MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "There was more than one row with the value of " + ColumnValue + " in the " + ColumnName + " column. Row Result will only return the first value found.\n\t\t" + std::to_string(count) + " other instances found. Total Rows Matching Argument: " + std::to_string((count + 1)));
+			return RowOut;
+		}
+		else return RowOut;
+	}
+
+	MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "No Column exists where column is equal to " + ColumnName + " and value is equal to " + ColumnValue);
+	return MySQLRowResult();
+}
+
+TArray<MySQLRowResult> MySQLEngine::GetRowsWhereColumnValuesEqual(MySQLQueryResult * QueryResults, std::string ColumnName, std::string ColumnValue)
+{
+	TArray<MySQLRowResult> Rows;
+
+	for (auto Row : QueryResults->Rows)
+	{
+		for (auto Val : Row.KeyValue)
+		{
+			if (Val.Key == ColumnName)
+			{
+				if (Val.Value == ColumnValue)
+				{
+					Rows.Add(Row);
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else
+				continue;
+		}
+	}
+	
+	if (Rows.Max() == 0)
+	{
+		MySQLDatabaseManager::GetInstance()->GetConnection()->MySQLErrorManager(false, "No Column exists where column is equal to " + ColumnName + " and value is equal to " + ColumnValue);
+		return TArray<MySQLRowResult>();
+	}
+
+	return Rows;
+}
+
+ConnectionConfigurationData::ConnectionConfigurationData()
+{
+	DatabaseAddress = "";
+	Username = "";
+	Password = "";
+	DatabaseName = "";
+}
+
+ConnectionConfigurationData::ConnectionConfigurationData(std::string DatabaseAddr, std::string UsrName, std::string Passwd, std::string DBName)
+{
+	DatabaseAddress = DatabaseAddr;
+	Username = UsrName;
+	Password = Passwd;
+	DatabaseName = DBName;
+}
+
+    ```
   </div>
 
   <!-- Content Section Wrapper -->
