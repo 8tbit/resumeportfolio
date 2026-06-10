@@ -26,7 +26,7 @@ title: My Clean Site
   }
 </style>
 
-<div class="card" mardkwon="1">
+<div class="card" markdown="1">
   # Welcome to My Custom Site!
 
   Test body.
