@@ -26,7 +26,7 @@ title: My Clean Site
   }
 </style>
 
-<div class="card">
+<div class="card" mardkwon="1">
   # Welcome to My Custom Site!
 
   Test body.
