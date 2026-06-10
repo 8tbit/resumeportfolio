@@ -3,9 +3,25 @@ layout: null
 title: My Live Page
 ---
 
-# Hello! This is a Markdown Heading
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #f4f4f9;
+    color: #333;
+  }
+  h1 { color: #0066cc; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+  ul { padding-left: 20px; }
+</style>
 
-If this text is **bold**, the Markdown engine is officially working. 
+# My Live Page
 
-### Why we changed this:
-By setting `layout: null`, we told Jekyll to stop looking for missing layout template folders and just compile this single file directly. 
+This is standard **Markdown** text running alongside our styles!
+
+### My Features:
+* **Bold text** works perfectly.
+* *Italic text* works too.
+* Links like [Google](https://google.com) look clean.
